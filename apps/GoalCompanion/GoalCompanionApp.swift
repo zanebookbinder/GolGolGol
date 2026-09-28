@@ -181,6 +181,6 @@ enum ScreenTimeMonitor {
         guard AppGroup.defaults.string(forKey: alertedKey) != today else { return }
         AppGroup.defaults.set(today, forKey: alertedKey)
         EventLog.append(.error, "Screen Time access was lost (status: \(AuthorizationCenter.shared.authorizationStatus))")
-        DeviceLink.shared.sendAlert("Screen Time access was lost. Open GolGolGol!!! on your iPhone to turn it back on.")
+        DeviceLink.shared.sendAlert("Screen Time access was lost. Open Golazo on your iPhone to turn it back on.")
     }
 }

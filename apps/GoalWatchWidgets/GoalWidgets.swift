@@ -123,7 +123,7 @@ struct GoalsWidget: Widget {
             GoalWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("GolGolGol!!!")
+        .configurationDisplayName("Golazo")
         .description("Goals hit today, the next one to finish, and the recap at night.")
         .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .accessoryCorner])
     }

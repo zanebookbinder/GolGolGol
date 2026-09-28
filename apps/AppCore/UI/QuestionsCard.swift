@@ -64,3 +64,38 @@ struct QuestionsCard: View {
         .accessibilityIdentifier("\(type.rawValue)-\(yes ? "yes" : "no")")
     }
 }
+
+extension AppModel {
+    var isRecapTime: Bool {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: .now)
+        return (c.hour ?? 0) * 60 + (c.minute ?? 0) >= data.preferences.recapMinutes
+    }
+
+    /// Tonight's cheer, once it's recap time.
+    var tonightCelebration: Celebration? {
+        guard isRecapTime else { return nil }
+        return Celebrations.best(for: today, goals: data.activeGoals) { goal, day in data.summary(goalId: goal.id, day: day) }
+    }
+}
+
+/// "GOOOOOL!", "Clean sheet!" or "Hat trick!" at the top of Today during the recap.
+struct CelebrationBanner: View {
+    var celebration: Celebration
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: celebration.symbol)
+                .font(.title2)
+                .foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(celebration.title)
+                    .font(.title3.weight(.heavy))
+                Text(celebration.message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+}

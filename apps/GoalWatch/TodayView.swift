@@ -8,6 +8,9 @@ struct TodayView: View {
 
     var body: some View {
         List {
+            if let celebration = model.tonightCelebration {
+                CelebrationBanner(celebration: celebration)
+            }
             ForEach(model.questionDays, id: \.self) { day in
                 QuestionsCard(day: day)
             }

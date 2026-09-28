@@ -43,7 +43,7 @@ enum RecapScheduler {
     /// Immediate alert, e.g. "Screen Time access was lost" from the iPhone.
     static func postAlert(_ message: String) {
         let content = UNMutableNotificationContent()
-        content.title = "GolGolGol!!!"
+        content.title = "Golazo"
         content.body = message
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }

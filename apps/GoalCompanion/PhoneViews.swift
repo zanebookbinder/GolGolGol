@@ -37,6 +37,9 @@ struct PhoneTodayView: View {
                     }
                 }
             }
+            if let celebration = model.tonightCelebration {
+                Section { CelebrationBanner(celebration: celebration) }
+            }
             ForEach(model.questionDays, id: \.self) { day in
                 QuestionsCard(day: day)
             }

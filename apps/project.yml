@@ -49,12 +49,12 @@ targets:
     info:
       path: GoalCompanion/Info.plist
       properties:
-        CFBundleDisplayName: "GolGolGol!!!"
+        CFBundleDisplayName: "Golazo"
         UILaunchScreen: {}
         CFBundleURLTypes:
           - CFBundleURLName: com.zanebookbinder.goaltracker
             CFBundleURLSchemes: [goaltracker]
-        NSHealthShareUsageDescription: GolGolGol!!! reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+        NSHealthShareUsageDescription: Golazo reads steps, workouts, exercise minutes, and sleep to check your daily goals.
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [com.zanebookbinder.goaltracker.refresh]
     entitlements:
@@ -135,14 +135,14 @@ targets:
     info:
       path: GoalWatch/Info.plist
       properties:
-        CFBundleDisplayName: "GolGolGol!!!"
+        CFBundleDisplayName: "Golazo"
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.zanebookbinder.goaltracker
         WKRunsIndependentlyOfCompanionApp: true
         CFBundleURLTypes:
           - CFBundleURLName: com.zanebookbinder.goaltracker.watch
             CFBundleURLSchemes: [goaltracker]
-        NSHealthShareUsageDescription: GolGolGol!!! reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+        NSHealthShareUsageDescription: Golazo reads steps, workouts, exercise minutes, and sleep to check your daily goals.
     entitlements:
       path: GoalWatch/GoalWatch.entitlements
       properties:
@@ -162,7 +162,7 @@ targets:
     info:
       path: GoalWatchWidgets/Info.plist
       properties:
-        CFBundleDisplayName: "GolGolGol!!! Widgets"
+        CFBundleDisplayName: "Golazo Widgets"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:

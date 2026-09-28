@@ -65,7 +65,7 @@ struct PartnerInviteSection: View {
                     Text(invite.code).font(.largeTitle.monospaced().bold()).textSelection(.enabled)
                     Text("Send this to your partner. It lets them see your data (read-only) and expires \(invite.expiresAt.formatted(date: .abbreviated, time: .omitted)).")
                         .font(.caption).foregroundStyle(.secondary)
-                    ShareLink(item: "My GolGolGol!!! invite code: \(invite.code)")
+                    ShareLink(item: "My Golazo invite code: \(invite.code)")
                 }
             } else {
                 Button("Create an invite code") {

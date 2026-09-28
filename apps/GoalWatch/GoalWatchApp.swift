@@ -126,6 +126,7 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
                 WidgetCenter.shared.reloadAllTimelines()
                 DeviceLink.shared.push(data, session: nil)
                 ProgressReminders.update(data)
+                Cheers.announceIfNew(AppModel.shared.tonightCelebration)
                 if data.preferences.recapMinutes != lastRecapMinutes {
                     lastRecapMinutes = data.preferences.recapMinutes
                     Task { await RecapScheduler.schedule(minutes: data.preferences.recapMinutes) }

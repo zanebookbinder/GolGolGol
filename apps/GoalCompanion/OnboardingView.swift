@@ -45,7 +45,7 @@ struct OnboardingView: View {
     private var content: some View {
         switch step {
         case .consent:
-            Text("GolGolGol!!! checks six daily goals (steps, workouts, screen time, pickups, over-eating, and wake-up time) on your Apple Watch, and can share every data point with a partner.")
+            Text("Golazo checks six daily goals (steps, workouts, screen time, pickups, over-eating, and wake-up time) on your Apple Watch, and can share every data point with a partner.")
             Text("What leaves this device")
                 .font(.headline)
             Text("If you sign in, your step counts, workouts, sleep-derived wake times, screen time readings, and recap answers are uploaded to the app's AWS backend so your Watch and your partner can read them. Your partner can only see your data after you give them an invite code, and can never change it. Nothing is used for advertising or sold.")
@@ -75,7 +75,7 @@ struct OnboardingView: View {
             primary("Continue") { next() }
 
         case .health:
-            Text("GolGolGol!!! reads steps, exercise minutes, workouts, and sleep. The Watch measures these itself; the iPhone backfills when the Watch was off.")
+            Text("Golazo reads steps, exercise minutes, workouts, and sleep. The Watch measures these itself; the iPhone backfills when the Watch was off.")
             primary("Allow Health access") {
                 do {
                     try await HealthCollector.shared.requestAuthorization()
@@ -199,7 +199,7 @@ struct ShortcutWalkthrough: View {
                 .font(.callout).foregroundStyle(.secondary)
             ShortcutInstallButtons()
             Text("2. Run them from here").font(.headline)
-            Text("GolGolGol!!! reminds you in the evening and the morning; tap the notification to take a snapshot. You can also use \"Take snapshot now\" on the Today screen. Change the reminder times in Settings.")
+            Text("Golazo reminds you in the evening and the morning; tap the notification to take a snapshot. You can also use \"Take snapshot now\" on the Today screen. Change the reminder times in Settings.")
                 .font(.callout).foregroundStyle(.secondary)
             Text("Optional: in Shortcuts → Automation, add \"Charger is Connected\" → run Snapshot to take one automatically at night.")
                 .font(.callout).foregroundStyle(.secondary)
