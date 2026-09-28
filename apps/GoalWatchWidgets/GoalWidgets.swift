@@ -168,34 +168,106 @@ struct MiniRing: View {
     }
 }
 
-/// All goals at once: a ring per goal and today's count.
+/// All goals at once, for the Smart Stack: today's count, then each goal's ring with its value.
 struct AllGoalsWidgetView: View {
     var entry: GoalEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text("\(entry.hits)/\(entry.applicable.count) completed")
-                .font(.headline)
-            HStack(spacing: 4) {
-                ForEach(entry.goals) { goal in
-                    MiniRing(goal: goal, summary: entry.summaries.first { $0.goalId == goal.id })
-                        .frame(width: 22, height: 22)
+                .font(.system(size: 13, weight: .semibold))
+            Grid(horizontalSpacing: 6, verticalSpacing: 3) {
+                ForEach(rows, id: \.first?.id) { row in
+                    GridRow {
+                        ForEach(row) { goal in
+                            let summary = entry.summaries.first { $0.goalId == goal.id }
+                            HStack(spacing: 3) {
+                                MiniRing(goal: goal, summary: summary)
+                                    .frame(width: 16, height: 16)
+                                Text(shortValue(goal, summary))
+                                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .widgetURL(URL(string: "goaltracker://today"))
     }
+
+    /// Two rows of three.
+    private var rows: [[Goal]] {
+        stride(from: 0, to: entry.goals.count, by: 3).map { Array(entry.goals[$0..<min($0 + 3, entry.goals.count)]) }
+    }
+
+    /// A few characters per goal: "8.2k", "20m", "1h45", "23", "6:12", or a check or cross.
+    private func shortValue(_ goal: Goal, _ summary: DaySummary?) -> String {
+        guard let summary, summary.status != .off else { return summary?.status == .off ? "off" : "–" }
+        let value = summary.value
+        switch goal.type {
+        case .steps:
+            let steps = value ?? 0
+            return steps >= 1000 ? String(format: "%.1fk", steps / 1000) : "\(Int(steps))"
+        case .workout:
+            if goal.workoutMeasure == .workoutCount { return "\(Int(value ?? 0))/\(Int(goal.target))" }
+            return "\(Int(value ?? 0))m"
+        case .screenTime:
+            return value.map { GoalFormat.duration(minutes: $0) } ?? "–"
+        case .pickups:
+            return value.map { "\(Int($0))" } ?? statusMark(summary)
+        case .wakeup:
+            return value.map { GoalFormat.clock(minutesAfterMidnight: $0).replacingOccurrences(of: " AM", with: "").replacingOccurrences(of: " PM", with: "") } ?? statusMark(summary)
+        case .overeating:
+            return statusMark(summary)
+        }
+    }
+
+    private func statusMark(_ summary: DaySummary) -> String {
+        switch summary.status {
+        case .hit: "✓"
+        case .missed: "✗"
+        default: "–"
+        }
+    }
+}
+
+/// Smart Stack relevance: always somewhat relevant during the day, more so in the evening when
+/// there's still time to finish goals.
+struct AllGoalsProvider: TimelineProvider {
+    private let base = GoalProvider()
+
+    func placeholder(in context: Context) -> GoalEntry { .placeholder }
+
+    func getSnapshot(in context: Context, completion: @escaping (GoalEntry) -> Void) {
+        base.getSnapshot(in: context, completion: completion)
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<GoalEntry>) -> Void) {
+        base.getTimeline(in: context) { timeline in
+            let entries = timeline.entries.map { entry -> GoalEntry in
+                var entry = entry
+                let hour = Calendar.current.component(.hour, from: entry.date)
+                let allDone = entry.hits == entry.applicable.count && !entry.applicable.isEmpty
+                entry.relevance = TimelineEntryRelevance(score: allDone ? 20 : (hour >= 17 ? 80 : 50))
+                return entry
+            }
+            completion(Timeline(entries: entries, policy: timeline.policy))
+        }
+    }
 }
 
 struct AllGoalsWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "AllGoals", provider: GoalProvider()) { entry in
+        StaticConfiguration(kind: "AllGoals", provider: AllGoalsProvider()) { entry in
             AllGoalsWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("All goals")
-        .description("A ring for each goal, showing today's progress.")
+        .description("Every goal's progress today, for the Smart Stack.")
         .supportedFamilies([.accessoryRectangular])
     }
 }

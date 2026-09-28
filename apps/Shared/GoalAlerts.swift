@@ -16,14 +16,4 @@ enum GoalAlerts {
         content.sound = .default
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "\(id)-\(day.rawValue)", content: content, trigger: nil))
     }
-
-    /// After a snapshot: warns when pickups are within 10 of the limit. Pickups have no live data, so
-    /// this can only happen when a snapshot runs.
-    static func checkPickups(_ pickups: Int, goal: Goal?, day: DayKey) {
-        guard let goal, goal.active, day == .today() else { return }
-        let left = Int(goal.target) - pickups
-        guard left > 0, left <= 10 else { return }
-        post(id: "pickups-warning", title: "\(left) pickups left today",
-             body: "You're at \(pickups) of your \(Int(goal.target))-pickup limit.", day: day)
-    }
 }

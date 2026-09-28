@@ -51,9 +51,6 @@ struct SubmitSnapshotIntent: AppIntent {
         }
 
         await model.record(SnapshotValidator.metrics(for: reading, day: targetDay, ownerId: model.data.ownerId))
-        if let pickups = reading.pickups {
-            GoalAlerts.checkPickups(pickups, goal: model.data.activeGoals.first { $0.type == .pickups }, day: targetDay)
-        }
         try? await model.engine.sync(days: [targetDay])
         await model.reload()
 

@@ -22,14 +22,9 @@ shared with a partner, and wrapped up each night on your wrist.
 
   Tap any goal on any day for its page: what happened (step chart, workouts, wake time) and a place to correct the result.
 - **iPhone app:** onboarding, Screen Time monitoring, the same Today, History, Partner and Settings, and one-tap snapshot buttons.
-- **Complications and widgets:**
-  - all six goals as colored rings;
-  - goals completed today;
-  - the goal closest to done;
-  - a Smart Stack card at recap time.
+- **Smart Stack widget:** every goal's ring and value at a glance, surfacing more in the evening. Smaller widgets show goals completed today and the goal closest to done.
 - **Reminders:**
   - 30 minutes before the screen time limit;
-  - 10 pickups before the pickups limit (when a snapshot runs);
   - 6pm if steps or the workout aren't done;
   - the nightly recap, with over-eating answerable from the notification.
 - **Partner sharing:** exchange an invite code, and each of you sees the other's goals live.
