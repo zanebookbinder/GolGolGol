@@ -1,7 +1,7 @@
 import Foundation
 
 public enum GoalType: String, Codable, CaseIterable, Sendable, Identifiable {
-    case steps, workout, screenTime, pickups, overeating, wakeup
+    case steps, workout, screenTime, pickups, overeating, wakeup, phoneBeforeBed
 
     public var id: String { rawValue }
 
@@ -13,6 +13,7 @@ public enum GoalType: String, Codable, CaseIterable, Sendable, Identifiable {
         case .pickups: "Pickups"
         case .overeating: "Over-eating"
         case .wakeup: "Wake up"
+        case .phoneBeforeBed: "Phone before bed"
         }
     }
 
@@ -24,13 +25,14 @@ public enum GoalType: String, Codable, CaseIterable, Sendable, Identifiable {
         case .pickups: "hand.raised"
         case .overeating: "fork.knife"
         case .wakeup: "alarm"
+        case .phoneBeforeBed: "iphone.slash"
         }
     }
 
     public var direction: GoalDirection {
         switch self {
         case .steps, .workout: .atLeast
-        case .screenTime, .pickups, .overeating, .wakeup: .atMost
+        case .screenTime, .pickups, .overeating, .wakeup, .phoneBeforeBed: .atMost
         }
     }
 
@@ -41,6 +43,7 @@ public enum GoalType: String, Codable, CaseIterable, Sendable, Identifiable {
         case .pickups: "pickups"
         case .overeating: ""
         case .wakeup: "time"
+        case .phoneBeforeBed: "min"
         }
     }
 }
@@ -140,7 +143,8 @@ public struct Goal: Codable, Hashable, Sendable, Identifiable {
     public var hasCanonicalId: Bool { id == Goal.canonicalId(type) }
 
     /// The starting set for a new install: 10,000 steps, under 2 hours of screen time, under 50
-    /// pickups, one 20-minute workout, up by 6:00 on weekdays, and no over-eating.
+    /// pickups, one 20-minute workout, up by 6:00 on weekdays, no over-eating, and no phone in the
+    /// 30 minutes before falling asleep.
     public static func defaults(ownerId: String) -> [Goal] {
         [
             Goal(id: canonicalId(.steps), ownerId: ownerId, type: .steps, target: 10_000),
@@ -149,6 +153,7 @@ public struct Goal: Codable, Hashable, Sendable, Identifiable {
             Goal(id: canonicalId(.pickups), ownerId: ownerId, type: .pickups, target: 50),
             Goal(id: canonicalId(.overeating), ownerId: ownerId, type: .overeating, target: 0),
             Goal(id: canonicalId(.wakeup), ownerId: ownerId, type: .wakeup, target: 6 * 60, days: .weekdays),
+            Goal(id: canonicalId(.phoneBeforeBed), ownerId: ownerId, type: .phoneBeforeBed, target: 30),
         ]
     }
 }

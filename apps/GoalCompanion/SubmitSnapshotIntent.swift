@@ -28,7 +28,7 @@ struct SubmitSnapshotIntent: AppIntent {
     }
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let model = AppModel.shared
         await model.start()
 
@@ -56,7 +56,10 @@ struct SubmitSnapshotIntent: AppIntent {
 
         let summary = "\(GoalFormat.duration(minutes: Double(reading.screenTimeMinutes))), \(reading.pickups.map { "\($0) pickups" } ?? "pickups unreadable")"
         EventLog.append(.snapshot, "\(targetDay.rawValue): \(summary)")
-        return .result(value: summary, dialog: "\(summary)")
+        // Close the Snapshot screen now that it's been read, so a later snapshot never reuses it.
+        NotificationCenter.default.post(name: .snapshotSubmitted, object: nil)
+        // No dialog: the shortcut finishes quietly.
+        return .result(value: summary)
     }
 }
 
@@ -73,4 +76,9 @@ struct GoalShortcuts: AppShortcutsProvider {
             systemImageName: "camera.viewfinder"
         )
     }
+}
+
+extension Notification.Name {
+    /// Posted when a snapshot's numbers have been saved; the app closes the Snapshot screen.
+    static let snapshotSubmitted = Notification.Name("snapshotSubmitted")
 }

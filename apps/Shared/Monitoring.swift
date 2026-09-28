@@ -47,6 +47,48 @@ enum Monitoring {
         DeviceActivityCenter().activities.contains(activity)
     }
 
+    // MARK: Evening (phone before bed)
+
+    /// A second schedule, 9pm–3am, with a threshold every 2 minutes of use. Each crossing is stored
+    /// with its time, so the latest one before sleep is roughly the last phone use.
+    static let eveningActivity = DeviceActivityName("evening")
+
+    static func eveningEventName(minutes: Int) -> DeviceActivityEvent.Name {
+        DeviceActivityEvent.Name("e\(minutes)")
+    }
+
+    static func startEvening() throws {
+        let selection = MonitoringSettings.selection
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 21, minute: 0),
+            intervalEnd: DateComponents(hour: 3, minute: 0),
+            repeats: true
+        )
+        var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
+        for minutes in Bedtime.ladder {
+            events[eveningEventName(minutes: minutes)] = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                webDomains: selection.webDomainTokens,
+                threshold: DateComponents(hour: minutes / 60, minute: minutes % 60),
+                includesPastActivity: true
+            )
+        }
+        let center = DeviceActivityCenter()
+        center.stopMonitoring([eveningActivity])
+        try center.startMonitoring(eveningActivity, during: schedule, events: events)
+        MonitoringSettings.registeredEveningLadder = Bedtime.ladder
+    }
+
+    static func stopEvening() {
+        DeviceActivityCenter().stopMonitoring([eveningActivity])
+        MonitoringSettings.registeredEveningLadder = []
+    }
+
+    static var isEveningActive: Bool {
+        DeviceActivityCenter().activities.contains(eveningActivity)
+    }
+
     /// Threshold events only count the apps and categories picked in the Screen Time picker; with
     /// nothing picked they never fire.
     static var hasSelection: Bool {
@@ -98,6 +140,11 @@ enum MonitoringSettings {
 
     static var needsRegistering: Bool {
         registeredLadder != ThresholdLadder.minutes(goal: targetMinutes)
+    }
+
+    static var registeredEveningLadder: [Int] {
+        get { AppGroup.defaults.array(forKey: "registeredEveningLadder") as? [Int] ?? [] }
+        set { AppGroup.defaults.set(newValue, forKey: "registeredEveningLadder") }
     }
 
     /// The signed-in owner, so the extension can stamp metrics without loading the store.

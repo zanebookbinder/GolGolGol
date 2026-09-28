@@ -105,7 +105,7 @@ struct GoalWidgetView: View {
                 Label(goal.type.title, systemImage: goal.type.symbol).font(.headline)
                 Text(GoalFormat.value(summary, goal: goal)).font(.caption)
                 ProgressView(value: GoalFormat.progress(summary, goal: goal))
-                    .tint(goal.direction == .atLeast ? .blue : .orange)
+                    .tint(.blue)
             }
             .widgetURL(URL(string: "goaltracker://today"))
         } else {
@@ -129,39 +129,33 @@ struct GoalsWidget: Widget {
     }
 }
 
-extension GoalType {
-    /// Same colors as the apps (see AppCore Components).
-    var widgetColor: Color {
-        switch self {
-        case .steps: .blue
-        case .workout: .green
-        case .screenTime: .purple
-        case .pickups: .orange
-        case .overeating: .pink
-        case .wakeup: .yellow
-        }
-    }
-}
-
-/// A small ring for one goal: fills in its color as it progresses, solid when completed, red if missed.
+/// A small ring for one goal, in the apps' status colors: blue and filling while in progress, solid
+/// green when completed, solid red with an ✕ when missed.
 struct MiniRing: View {
     var goal: Goal
     var summary: DaySummary?
 
     var body: some View {
         let status = summary?.status ?? .pending
-        let color: Color = status == .missed ? .red : (status == .off ? .gray : goal.type.widgetColor)
         ZStack {
-            if status == .hit {
-                Circle().fill(color)
-                Image(systemName: goal.type.symbol).font(.system(size: 9, weight: .bold)).foregroundStyle(.black)
-            } else {
-                Circle().stroke(color.opacity(0.3), lineWidth: 3)
+            switch status {
+            case .hit, .missed:
+                Circle().fill(status == .hit ? Color.green : Color.red)
+                Image(systemName: goal.type.symbol)
+                    .font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                if status == .missed {
+                    Image(systemName: "xmark").font(.system(size: 14, weight: .light)).foregroundStyle(.white.opacity(0.35))
+                }
+            case .pending:
+                Circle().stroke(Color.blue.opacity(0.3), lineWidth: 3)
                 Circle()
                     .trim(from: 0, to: GoalFormat.progress(summary, goal: goal))
-                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                Image(systemName: goal.type.symbol).font(.system(size: 9, weight: .semibold)).foregroundStyle(color)
+                Image(systemName: goal.type.symbol).font(.system(size: 9, weight: .semibold)).foregroundStyle(.blue)
+            case .off:
+                Circle().stroke(Color.gray.opacity(0.3), lineWidth: 3)
+                Image(systemName: goal.type.symbol).font(.system(size: 9, weight: .semibold)).foregroundStyle(.gray)
             }
         }
         .widgetAccentable()
@@ -213,15 +207,18 @@ struct AllGoalsWidgetView: View {
             let steps = value ?? 0
             return steps >= 1000 ? String(format: "%.1fk", steps / 1000) : "\(Int(steps))"
         case .workout:
-            if goal.workoutMeasure == .workoutCount { return "\(Int(value ?? 0))/\(Int(goal.target))" }
-            return "\(Int(value ?? 0))m"
+            switch goal.workoutMeasure ?? .longestWorkout {
+            case .workoutCount: return "\(Int(value ?? 0))/\(Int(goal.target))"
+            case .longestWorkout: return "\((value ?? 0) >= goal.target || summary.status == .hit ? 1 : 0)/1"
+            case .exerciseMinutes: return "\(Int(value ?? 0))m"
+            }
         case .screenTime:
             return value.map { GoalFormat.duration(minutes: $0) } ?? "–"
         case .pickups:
             return value.map { "\(Int($0))" } ?? statusMark(summary)
         case .wakeup:
             return value.map { GoalFormat.clock(minutesAfterMidnight: $0).replacingOccurrences(of: " AM", with: "").replacingOccurrences(of: " PM", with: "") } ?? statusMark(summary)
-        case .overeating:
+        case .overeating, .phoneBeforeBed:
             return statusMark(summary)
         }
     }

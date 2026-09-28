@@ -29,26 +29,37 @@ public enum WakeupDetector {
     }
 
     public static func wakeTime(from samples: [SleepInterval], on day: DayKey, calendar: Calendar = .current) -> Date? {
+        mainSession(from: samples, endingOn: day, calendar: calendar)?.end
+    }
+
+    /// When the night's main sleep began: the start of the same session whose end is the wake time.
+    /// `day` is the morning it ends; the bedtime belongs to the evening before.
+    public static func sleepOnset(from samples: [SleepInterval], endingOn day: DayKey, calendar: Calendar = .current) -> Date? {
+        mainSession(from: samples, endingOn: day, calendar: calendar)?.start
+    }
+
+    /// The session with the most sleep that ends on `day` before `latestWakeHour`.
+    static func mainSession(from samples: [SleepInterval], endingOn day: DayKey, calendar: Calendar) -> (start: Date, end: Date)? {
         let window = searchWindow(for: day, calendar: calendar)
         let dayStart = day.start(calendar: calendar)
         let sorted = samples
             .filter { $0.end > $0.start && $0.end > window.start && $0.start < window.end }
             .sorted { $0.start < $1.start }
 
-        var sessions: [(end: Date, asleep: TimeInterval)] = []
+        var sessions: [(start: Date, end: Date, asleep: TimeInterval)] = []
         for sample in sorted {
             if let last = sessions.last, sample.start.timeIntervalSince(last.end) <= maxGap {
                 sessions[sessions.count - 1].end = max(last.end, sample.end)
                 sessions[sessions.count - 1].asleep += sample.end.timeIntervalSince(sample.start)
             } else {
-                sessions.append((sample.end, sample.end.timeIntervalSince(sample.start)))
+                sessions.append((sample.start, sample.end, sample.end.timeIntervalSince(sample.start)))
             }
         }
 
         return sessions
             .filter { $0.end >= dayStart && $0.end <= window.end }
-            .max { $0.asleep < $1.asleep }?
-            .end
+            .max { $0.asleep < $1.asleep }
+            .map { ($0.start, $0.end) }
     }
 
     /// Minutes after local midnight, the unit wakeup goals and metrics use.

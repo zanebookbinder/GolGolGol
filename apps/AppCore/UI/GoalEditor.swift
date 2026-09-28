@@ -95,6 +95,14 @@ struct GoalEditor: View {
                 Text("Answered each night in the recap.")
                     .foregroundStyle(.secondary)
             }
+        case .phoneBeforeBed:
+            Section {
+                CompactStepper(value: $goal.target, range: 10...120, step: 5, text: "\(Int(goal.target))", caption: "minutes before sleep")
+            } header: {
+                Text("No phone for")
+            } footer: {
+                Text("Uses the time you fell asleep from Sleep, and phone use picked up by Screen Time between 9 PM and 3 AM.")
+            }
         case .wakeup:
             Section {
                 DatePicker("Wake by", selection: wakeTime, displayedComponents: .hourAndMinute)

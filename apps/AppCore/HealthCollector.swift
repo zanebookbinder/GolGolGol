@@ -194,9 +194,14 @@ final class HealthCollector: @unchecked Sendable {
             .filter { asleep.contains($0.value) }
             .map { SleepInterval(start: $0.startDate, end: $0.endDate) }
         guard let wake = WakeupDetector.wakeTime(from: intervals, on: day) else { return [] }
-        return [Metric(id: "wakeup:\(day.rawValue)", ownerId: ownerId, date: day, type: .wakeup, source: .healthKit,
-                       value: WakeupDetector.minutesAfterMidnight(wake, on: day), recordedAt: wake,
-                       detail: ["wokeAt": wake.ISO8601Format()])]
+        var metrics = [Metric(id: "wakeup:\(day.rawValue)", ownerId: ownerId, date: day, type: .wakeup, source: .healthKit,
+                              value: WakeupDetector.minutesAfterMidnight(wake, on: day), recordedAt: wake,
+                              detail: ["wokeAt": wake.ISO8601Format()])]
+        // The same night's bedtime, for the phone-before-bed goal (filed under the evening before).
+        if let onset = WakeupDetector.sleepOnset(from: intervals, endingOn: day) {
+            metrics.append(Bedtime.onset(onset, night: day.adding(days: -1), ownerId: ownerId))
+        }
+        return metrics
     }
 }
 

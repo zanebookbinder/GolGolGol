@@ -182,6 +182,7 @@ struct ScreenTimeSetup: View {
             MonitoringSettings.selection = selection
             do {
                 try Monitoring.start()
+                if Monitoring.isEveningActive { try Monitoring.startEvening() }
             } catch {
                 self.error = error.localizedDescription
             }

@@ -1,6 +1,6 @@
 # GolGolGol!!!
 
-A Watch-first daily goal tracker for two. Six goals, checked automatically where Apple allows it,
+A Watch-first daily goal tracker for two. Seven goals, checked automatically where Apple allows it,
 shared with a partner, and wrapped up each night on your wrist.
 
 | Goal | How it's measured | Default |
@@ -11,6 +11,7 @@ shared with a partner, and wrapped up each night on your wrist.
 | Pickups | Snapshot shortcut, or answered in the nightly questions | under 50 |
 | Wake up | HealthKit sleep: the morning's final wake time, on the days you pick | by 6:00, weekdays |
 | Over-eating | Answered in the nightly questions | none |
+| Phone before bed | Screen Time use 9 PM–3 AM (2-minute steps) vs. bedtime from Sleep; both shown and correctable | no phone 30 min before sleep |
 
 ## What it does
 

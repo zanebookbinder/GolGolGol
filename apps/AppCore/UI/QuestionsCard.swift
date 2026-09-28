@@ -2,8 +2,8 @@ import GoalKit
 import SwiftUI
 
 extension AppModel {
-    /// Days with recap questions to show on Today: yesterday if anything's unanswered, and today once
-    /// it's recap time (before that, over-eating is always unanswered, so asking would be noise).
+    /// Days with recap questions to show on Today: yesterday if anything's unanswered (including last
+    /// night's phone-before-bed when it couldn't be measured), and today once it's recap time (before that, over-eating is always unanswered, so asking would be noise).
     var questionDays: [DayKey] {
         var days: [DayKey] = []
         if !questions(for: yesterday).isEmpty { days.append(yesterday) }
@@ -47,6 +47,7 @@ struct QuestionsCard: View {
         case .overeating: return "Did you over-eat?"
         case .pickups: return "Under \(Int(goal?.target ?? 0)) pickups?"
         case .wakeup: return "Up by \(GoalFormat.clock(minutesAfterMidnight: (goal?.target ?? 0) + GoalEvaluator.wakeupToleranceMinutes))?"
+        case .phoneBeforeBed: return "Phone down \(Int(goal?.target ?? 30)) min before sleep?"
         default: return type.title
         }
     }

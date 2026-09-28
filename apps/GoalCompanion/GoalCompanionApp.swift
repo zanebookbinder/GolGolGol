@@ -28,8 +28,15 @@ struct GoalCompanionApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
-                .fullScreenCover(item: $snapshotDay) { day in
-                    SnapshotScreen(day: day)
+                // Stays presented while switching days (no dismiss/re-present animation for a
+                // screenshot to catch), and closes as soon as the numbers are submitted.
+                .fullScreenCover(isPresented: Binding(get: { snapshotDay != nil }, set: { if !$0 { snapshotDay = nil } })) {
+                    if let day = snapshotDay {
+                        SnapshotScreen(day: day).id(day)
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .snapshotSubmitted)) { _ in
+                    snapshotDay = nil
                 }
                 .onOpenURL(perform: handle)
                 .alert(snapshotOutcome?.succeeded == true ? "Snapshot saved" : "Snapshot didn't work",
@@ -72,8 +79,8 @@ struct GoalCompanionApp: App {
             snapshotDay = nil
             Task {
                 await model.refresh()
-                snapshotOutcome = SnapshotRunner.latestOutcome()
-                    ?? SnapshotOutcome(succeeded: true, message: "Screen time and pickups updated.")
+                // Only speak up if the reading was rejected; success is shown on Today.
+                if let outcome = SnapshotRunner.latestOutcome(), !outcome.succeeded { snapshotOutcome = outcome }
             }
         case .failed(let message):
             snapshotDay = nil
@@ -119,12 +126,28 @@ enum ScreenTimeMonitor {
     /// the threshold ladder when the target changes.
     static func sync(with data: StoreData) {
         MonitoringSettings.ownerId = data.ownerId
+        syncEvening(with: data)
         guard let goal = data.goals.first(where: { $0.type == .screenTime }), goal.active else { return }
         let target = Int(goal.target)
         MonitoringSettings.targetMinutes = target
         guard MonitoringSettings.needsRegistering else { return }
         if AuthorizationCenter.shared.authorizationStatus == .approved {
             try? Monitoring.start()
+        }
+    }
+
+    /// Runs the 9pm–3am schedule while the phone-before-bed goal is on.
+    static func syncEvening(with data: StoreData) {
+        let wanted = data.goals.contains { $0.type == .phoneBeforeBed && $0.active }
+        guard AuthorizationCenter.shared.authorizationStatus == .approved, Monitoring.hasSelection else { return }
+        if wanted, !Monitoring.isEveningActive || MonitoringSettings.registeredEveningLadder != Bedtime.ladder {
+            do {
+                try Monitoring.startEvening()
+            } catch {
+                EventLog.append(.error, "Couldn't start evening monitoring: \(error.localizedDescription)")
+            }
+        } else if !wanted, Monitoring.isEveningActive {
+            Monitoring.stopEvening()
         }
     }
 
@@ -147,6 +170,7 @@ enum ScreenTimeMonitor {
                     EventLog.append(.error, "Couldn't restart monitoring: \(error.localizedDescription)")
                 }
             }
+            syncEvening(with: AppModel.shared.data)
             if Monitoring.isActive && Monitoring.hasSelection {
                 let marker = Monitoring.monitoringMarker(ownerId: AppModel.shared.data.ownerId)
                 Task { await AppModel.shared.record([marker]) }

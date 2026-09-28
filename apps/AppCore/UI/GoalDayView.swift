@@ -1,4 +1,3 @@
-import Charts
 import GoalKit
 import SwiftUI
 
@@ -56,6 +55,10 @@ struct GoalDayView: View {
     @State private var number: Double = 0
     @State private var numberText = ""
     @State private var confirmation: String?
+    // Phone before bed: the times being corrected, in minutes after the evening's midnight.
+    @State private var bedOnset: Double = 23 * 60
+    @State private var bedLastUse: Double = 22 * 60
+    @State private var bedUsedPhone = false
 
     private var summary: DaySummary? { owner.summary(model, goal, day) }
     private var dayMetrics: [Metric] {
@@ -135,19 +138,6 @@ struct GoalDayView: View {
     @ViewBuilder
     private var timeline: some View {
         switch goal.type {
-        case .steps:
-            let hourly = dayMetrics.filter { $0.detail?[MetricKind.key] == MetricKind.hourlySteps }
-            if !hourly.isEmpty {
-                Section("By hour") {
-                    Chart(hourly) { metric in
-                        BarMark(x: .value("Hour", Int(metric.detail?["hour"] ?? "0") ?? 0), y: .value("Steps", metric.value))
-                            .foregroundStyle(goal.type.color)
-                    }
-                    .chartXScale(domain: 0...23)
-                    .chartXAxis { AxisMarks(values: [0, 6, 12, 18]) }
-                    .frame(height: 90)
-                }
-            }
         case .workout:
             let workouts = dayMetrics.filter { $0.detail?[MetricKind.key] == MetricKind.workout }
             let exercise = dayMetrics.first { $0.detail?[MetricKind.key] == MetricKind.exerciseMinutes }
@@ -166,6 +156,21 @@ struct GoalDayView: View {
                     LabeledContent("Exercise minutes", value: "\(Int(exercise.value))")
                 }
             }
+        case .phoneBeforeBed:
+            let found = Bedtime.findings(metrics: owner.metrics(model), night: day)
+            Section {
+                LabeledContent("Fell asleep") {
+                    Text(found.sleepOnset.map { GoalFormat.clock(minutesAfterMidnight: $0) + (found.onsetEdited ? " (corrected)" : "") }
+                         ?? "No sleep data yet")
+                }
+                LabeledContent("Last phone use") {
+                    Text(lastUseText(found))
+                }
+            } header: {
+                Text("What was found")
+            } footer: {
+                Text("Bedtime comes from your Sleep data. Phone use is picked up 9 PM–3 AM in 2-minute steps and can lag a few minutes; correct it below if it's wrong.")
+            }
         case .wakeup:
             if let wake = dayMetrics.last(where: { $0.source == .healthKit }) {
                 Section("Sleep data") {
@@ -177,10 +182,16 @@ struct GoalDayView: View {
             } else if summary?.status == .off {
                 Section { Text("No wake-up goal on \(day.start().formatted(.dateTime.weekday(.wide)))s").foregroundStyle(.secondary) }
             }
-        case .screenTime, .pickups, .overeating:
-            // Just the result (shown above); the individual readings aren't worth the space.
+        case .steps, .screenTime, .pickups, .overeating:
+            // Just the result (shown above).
             EmptyView()
         }
+    }
+
+    private func lastUseText(_ found: Bedtime.Findings) -> String {
+        let suffix = found.lastUseEdited ? " (corrected)" : ""
+        if let lastUse = found.lastUse { return GoalFormat.clock(minutesAfterMidnight: lastUse) + suffix }
+        return found.monitored ? "None this evening" + suffix : "Not measured (phone off?)"
     }
 
     private func workoutSubtitle(_ workout: Metric) -> String {
@@ -201,12 +212,30 @@ struct GoalDayView: View {
         case .steps, .workout, .screenTime: true
         case .pickups, .wakeup: summary?.value != nil || dayMetrics.contains { $0.source != .manual }
         case .overeating: false
+        case .phoneBeforeBed: true
         }
     }
 
     @ViewBuilder
     private var correction: some View {
-        if goal.type == .overeating {
+        if goal.type == .phoneBeforeBed {
+            Section {
+                DatePicker("Fell asleep", selection: eveningTime($bedOnset), displayedComponents: .hourAndMinute)
+                Toggle("Used phone before sleep", isOn: $bedUsedPhone)
+                if bedUsedPhone {
+                    DatePicker("Last phone use", selection: eveningTime($bedLastUse), displayedComponents: .hourAndMinute)
+                }
+                Button("Save") {
+                    run("Saved") {
+                        await model.setBedtime(goal, night: day, sleepOnset: bedOnset, lastUse: bedUsedPhone ? bedLastUse : nil)
+                    }
+                }
+            } header: {
+                Text("Correct the times")
+            } footer: {
+                Text("Completed or missed follows from these times and your goal.")
+            }
+        } else if goal.type == .overeating {
             Section("Set the result") {
                 HStack(spacing: 6) {
                     choice("Didn't over-eat", selected: summary?.status == .hit, color: .green) {
@@ -253,7 +282,7 @@ struct GoalDayView: View {
         case .screenTime: "screen time"
         case .pickups: "pickups"
         case .wakeup: "wake-up time"
-        case .overeating: ""
+        case .overeating, .phoneBeforeBed: ""
         }
     }
 
@@ -307,7 +336,27 @@ struct GoalDayView: View {
         return Double(numberText.filter(\.isNumber))
     }
 
+    /// A time-of-day picker over minutes after the evening's midnight: times before noon are the next
+    /// morning (12:30am = 1470).
+    private func eveningTime(_ minutes: Binding<Double>) -> Binding<Date> {
+        Binding(
+            get: { Bedtime.date(minutes: minutes.wrappedValue, night: day) },
+            set: { date in
+                let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+                let clock = Double(c.hour! * 60 + c.minute!)
+                minutes.wrappedValue = c.hour! < 12 ? 24 * 60 + clock : clock
+            }
+        )
+    }
+
     private func loadNumber() {
+        if goal.type == .phoneBeforeBed {
+            let found = Bedtime.findings(metrics: owner.metrics(model), night: day)
+            bedOnset = found.sleepOnset ?? 23 * 60
+            bedUsedPhone = found.lastUse != nil
+            bedLastUse = found.lastUse ?? bedOnset - 60
+            return
+        }
         number = summary?.value ?? (goal.type == .wakeup ? goal.target : 0)
         numberText = String(Int(number.rounded()))
     }

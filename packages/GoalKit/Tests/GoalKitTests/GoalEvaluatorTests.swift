@@ -36,6 +36,8 @@ struct GoalEvaluatorTests {
         let metrics = [metric(.workout, .healthKit, 20, kind: MetricKind.workout),
                        metric(.workout, .healthKit, 35, kind: MetricKind.exerciseMinutes)]
         #expect(GoalEvaluator.evaluate(goal, metrics: metrics, day: day, now: at(20), calendar: calendar).status == .pending)
+        let longest = GoalEvaluator.evaluate(goal, metrics: metrics, day: day, now: at(20), calendar: calendar)
+        #expect(GoalFormat.value(longest, goal: goal) == "0/1 30-minute workouts")
         goal.workoutMeasure = .exerciseMinutes
         #expect(GoalEvaluator.evaluate(goal, metrics: metrics, day: day, now: at(20), calendar: calendar).status == .hit)
     }

@@ -156,14 +156,41 @@ final class AppModel {
     /// Goes back to measured data for that day: removes a manual edit and any recap answer, so a
     /// self-reported goal (over-eating, pickups or wake-up without data) is unanswered again.
     func clearEdit(_ goal: Goal, on day: DayKey) async {
+        await clearOverrides(goal, on: day)
+        if goal.type == .phoneBeforeBed {
+            // Also drop corrected bedtime / last-use times, back to what sleep data and Screen Time found.
+            let cleared = [Bedtime.onsetEditId(day), Bedtime.lastUseEditId(day)]
+                .filter { id in data.metrics.values.contains { $0.id == id && $0.date == day } }
+                .map { Metric(id: $0, ownerId: data.ownerId, date: day, type: .phoneBeforeBed, source: .manual, value: 0,
+                              detail: [MetricKind.key: MetricKind.overrideCleared]) }
+            if !cleared.isEmpty { await record(cleared) }
+        }
+        // Raw readings for old days may no longer be on this device; fetch them to re-evaluate.
+        try? await engine.sync(days: [day])
+        await reload()
+    }
+
+    /// Removes a Completed/Missed edit and any recap answer.
+    private func clearOverrides(_ goal: Goal, on day: DayKey) async {
         if data.metrics.values.contains(where: { $0.id == MetricKind.answerId(goal.type, day) && $0.date == day }) {
             await record([Metric(id: MetricKind.answerId(goal.type, day), ownerId: data.ownerId, date: day, type: goal.type,
                                  source: .manual, value: 0, detail: [MetricKind.key: MetricKind.answerCleared])])
         }
         await writeEdit(goal, day, kind: MetricKind.overrideCleared, value: 0)
-        // Raw readings for old days may no longer be on this device; fetch them to re-evaluate.
-        try? await engine.sync(days: [day])
-        await reload()
+    }
+
+    /// Corrects what the phone-before-bed goal found for `night`: when you fell asleep, and your last
+    /// phone use before it (`nil` = none that evening). Times are minutes after the evening's midnight
+    /// (12:30am = 1470). Completed or missed then follows from the corrected times.
+    func setBedtime(_ goal: Goal, night: DayKey, sleepOnset: Double, lastUse: Double?) async {
+        // A Completed/Missed edit would outrank the times, so remove it first.
+        await clearOverrides(goal, on: night)
+        await record([
+            Metric(id: Bedtime.onsetEditId(night), ownerId: data.ownerId, date: night, type: .phoneBeforeBed, source: .manual,
+                   value: sleepOnset, detail: [MetricKind.key: MetricKind.sleepOnsetEdit]),
+            Metric(id: Bedtime.lastUseEditId(night), ownerId: data.ownerId, date: night, type: .phoneBeforeBed, source: .manual,
+                   value: lastUse ?? -1, detail: [MetricKind.key: MetricKind.lastUseEdit]),
+        ])
     }
 
     func isEdited(_ goal: Goal, on day: DayKey) -> Bool {

@@ -1,12 +1,14 @@
 import GoalKit
 import SwiftUI
 
+/// One color scheme everywhere: green = completed, red with an ✕ = missed, blue = in progress or not
+/// yet known, blank/grey = the goal doesn't apply that day.
 extension DayStatus {
     var color: Color {
         switch self {
         case .hit: .green
         case .missed: .red
-        case .pending: .gray
+        case .pending: .blue
         case .off: .gray.opacity(0.25)
         }
     }
@@ -15,28 +17,14 @@ extension DayStatus {
         switch self {
         case .hit: "Completed"
         case .missed: "Missed"
-        case .pending: "Pending"
+        case .pending: "In progress"
         case .off: "Off"
         }
     }
 }
 
-extension GoalType {
-    /// Each goal's color, used everywhere it appears (rings, grids, charts, widgets). Red is kept for misses.
-    var color: Color {
-        switch self {
-        case .steps: .blue
-        case .workout: .green
-        case .screenTime: .purple
-        case .pickups: .orange
-        case .overeating: .pink
-        case .wakeup: .yellow
-        }
-    }
-}
-
-/// Progress ring in the goal's color with its symbol in the middle. Completed fills the ring;
-/// missed turns it red; off is grey.
+/// A goal's ring: blue and filling while in progress, solid green when completed, solid red with a
+/// faint ✕ over the goal's icon when missed, grey when it doesn't apply.
 struct GoalRing: View {
     var goal: Goal
     var summary: DaySummary?
@@ -45,30 +33,33 @@ struct GoalRing: View {
 
     private var status: DayStatus { summary?.status ?? .pending }
 
-    private var tint: Color {
-        switch status {
-        case .missed: .red
-        case .off: .gray
-        default: goal.type.color
-        }
-    }
-
     var body: some View {
         ZStack {
-            if status == .hit {
-                Circle().fill(tint)
+            switch status {
+            case .hit, .missed:
+                Circle().fill(status.color)
                 Image(systemName: goal.type.symbol)
                     .font(.system(size: size * 0.4, weight: .bold))
-                    .foregroundStyle(.black)
-            } else {
-                Circle().stroke(tint.opacity(0.25), lineWidth: lineWidth)
+                    .foregroundStyle(.white)
+                if status == .missed {
+                    Image(systemName: "xmark")
+                        .font(.system(size: size * 0.7, weight: .light))
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+            case .pending:
+                Circle().stroke(Color.blue.opacity(0.25), lineWidth: lineWidth)
                 Circle()
                     .trim(from: 0, to: GoalFormat.progress(summary, goal: goal))
-                    .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Image(systemName: goal.type.symbol)
                     .font(.system(size: size * 0.38, weight: .semibold))
-                    .foregroundStyle(tint)
+                    .foregroundStyle(.blue)
+            case .off:
+                Circle().stroke(Color.gray.opacity(0.3), lineWidth: lineWidth)
+                Image(systemName: goal.type.symbol)
+                    .font(.system(size: size * 0.38, weight: .semibold))
+                    .foregroundStyle(.gray)
             }
         }
         .frame(width: size, height: size)
@@ -77,30 +68,33 @@ struct GoalRing: View {
     }
 }
 
-/// One goal on one day in the History grids: filled in the goal's color when completed, red when
-/// missed, an outline while pending, faint when off or in the future.
+/// One goal on one day in the History grids and calendar: green when completed, red with an ✕ when
+/// missed, a blue outline while in progress, faint in the future, blank when the goal doesn't apply.
 struct StatusDot: View {
     var status: DayStatus?
-    var color: Color = .gray
     var size: CGFloat = 8
 
     var body: some View {
-        Circle()
-            .fill(fill)
-            .overlay {
-                if status == .pending { Circle().stroke(color.opacity(0.6), lineWidth: 1) }
+        Group {
+            switch status {
+            case .hit:
+                Circle().fill(Color.green)
+            case .missed:
+                Circle().fill(Color.red)
+                    .overlay {
+                        Image(systemName: "xmark")
+                            .font(.system(size: size * 0.55, weight: .black))
+                            .foregroundStyle(.white)
+                    }
+            case .pending:
+                Circle().stroke(Color.blue, lineWidth: max(1, size / 8))
+            case .off:
+                Color.clear
+            case nil:
+                Circle().fill(.gray.opacity(0.12))
             }
-            .frame(width: size, height: size)
-    }
-
-    private var fill: Color {
-        switch status {
-        case .hit: color
-        case .missed: .red.opacity(0.8)
-        case .pending: .clear
-        case .off: .gray.opacity(0.2)
-        case nil: .gray.opacity(0.12)
         }
+        .frame(width: size, height: size)
     }
 }
 
@@ -207,9 +201,9 @@ struct WeekGrid: View {
             }
             ForEach(goals) { goal in
                 GridRow {
-                    Image(systemName: goal.type.symbol).font(.caption2).foregroundStyle(goal.type.color)
+                    Image(systemName: goal.type.symbol).font(.caption2).foregroundStyle(.secondary)
                     ForEach(days, id: \.self) { day in
-                        StatusDot(status: day > .today() ? nil : summary(goal, day)?.status, color: goal.type.color, size: dotSize)
+                        StatusDot(status: day > .today() ? nil : summary(goal, day)?.status, size: dotSize)
                     }
                 }
             }
@@ -277,7 +271,7 @@ struct MonthGrid: View {
         let columns = Array(repeating: GridItem(.fixed(dotSize), spacing: 1), count: 3)
         return LazyVGrid(columns: columns, spacing: 1) {
             ForEach(goals) { goal in
-                StatusDot(status: day > .today() ? nil : summary(goal, day)?.status, color: goal.type.color, size: dotSize)
+                StatusDot(status: day > .today() ? nil : summary(goal, day)?.status, size: dotSize)
             }
         }
         .frame(width: dotSize * 3 + 2)

@@ -54,6 +54,7 @@ public enum GoalEvaluator {
                 case .screenTime, .pickups: edit.value <= goal.target
                 case .wakeup: edit.value <= goal.target + wakeupToleranceMinutes
                 case .overeating: edit.value < 1
+                case .phoneBeforeBed: edit.value >= 1
                 }
                 return summary(hit ? .hit : .missed, edit.value, .manual)
             default:
@@ -110,6 +111,11 @@ public enum GoalEvaluator {
             guard let answer = latest(answers, source: .manual) else { return summary(.pending, nil, .selfReported) }
             return summary(answer.value >= 1 ? .missed : .hit, answer.value, .selfReported)
 
+        case .phoneBeforeBed:
+            return Bedtime.evaluate(goal, metrics: relevant, night: day, now: now, calendar: calendar) { status, value, upper, confidence in
+                summary(status, value, upper: upper, confidence)
+            }
+
         case .wakeup:
             if let wake = latest(relevant, source: .healthKit) {
                 let status: DayStatus = wake.value <= goal.target + wakeupToleranceMinutes ? .hit : .missed
@@ -137,6 +143,8 @@ public enum GoalEvaluator {
             switch summary.goalType {
             case .overeating: return true
             case .pickups, .wakeup: return summary.value == nil
+            // Asked only once the next afternoon has passed without enough data (see Bedtime).
+            case .phoneBeforeBed: return summary.confidence == .selfReported
             default: return false
             }
         }
@@ -182,7 +190,8 @@ public enum GoalFormat {
     }
 
     public static func clock(minutesAfterMidnight: Double, calendar: Calendar = .current) -> String {
-        let m = Int(minutesAfterMidnight.rounded())
+        // Bedtimes after midnight are stored past 24h (12:30am = 1470).
+        let m = Int(minutesAfterMidnight.rounded()) % (24 * 60)
         var components = DateComponents()
         components.hour = m / 60
         components.minute = m % 60
@@ -203,6 +212,7 @@ public enum GoalFormat {
         case .pickups: "≤ \(Int(goal.target))"
         case .overeating: "None"
         case .wakeup: "By \(clock(minutesAfterMidnight: goal.target))"
+        case .phoneBeforeBed: "No phone \(Int(goal.target)) min before sleep"
         }
     }
 
@@ -217,8 +227,16 @@ public enum GoalFormat {
         case .steps:
             return "\(Int(summary.value ?? 0).formatted()) / \(Int(goal.target).formatted())"
         case .workout:
-            let unit = goal.workoutMeasure == .workoutCount ? (goal.target == 1 ? "workout" : "workouts") : "min"
-            return "\(Int(summary.value ?? 0)) / \(Int(goal.target)) \(unit)"
+            switch goal.workoutMeasure ?? .longestWorkout {
+            case .workoutCount:
+                return "\(Int(summary.value ?? 0)) / \(Int(goal.target)) \(goal.target == 1 ? "workout" : "workouts")"
+            case .longestWorkout:
+                // One workout of at least N minutes: done or not, e.g. "0/1 20-minute workouts".
+                let done = (summary.value ?? 0) >= goal.target || summary.status == .hit
+                return "\(done ? 1 : 0)/1 \(Int(goal.target))-minute workouts"
+            case .exerciseMinutes:
+                return "\(Int(summary.value ?? 0)) / \(Int(goal.target)) min"
+            }
         case .screenTime:
             guard let value = summary.value else { return "No data" }
             if summary.confidence == .range {
@@ -236,6 +254,13 @@ public enum GoalFormat {
             case .missed: return "Did over-eat"
             default: return "Answer in recap"
             }
+        case .phoneBeforeBed:
+            guard let onset = summary.value else {
+                return summary.confidence == .selfReported ? "Answer in recap" : "After you sleep"
+            }
+            let lastUse = summary.upperValue.map { "last phone \(clock(minutesAfterMidnight: $0))" } ?? "no phone use"
+            if summary.status == .pending { return "Asleep \(clock(minutesAfterMidnight: onset)) · phone data missing" }
+            return "Asleep \(clock(minutesAfterMidnight: onset)) · \(lastUse)"
         case .wakeup:
             if let value = summary.value { return clock(minutesAfterMidnight: value) }
             return summary.status == .pending ? "No sleep data" : (summary.status == .hit ? "On time (self-reported)" : "Late (self-reported)")
@@ -251,7 +276,7 @@ public enum GoalFormat {
             return "\(approx)\(Int(value.rounded())) \(goal.workoutMeasure == .exerciseMinutes ? "exercise" : "workout") min"
         case .screenTime: return "\(approx)\(duration(minutes: value)) screen time"
         case .pickups: return "\(approx)\(Int(value.rounded())) pickups"
-        case .overeating, .wakeup: return ""
+        case .overeating, .wakeup, .phoneBeforeBed: return ""
         }
     }
 
@@ -259,10 +284,13 @@ public enum GoalFormat {
     public static func progress(_ summary: DaySummary?, goal: Goal) -> Double {
         guard let summary, summary.status != .off else { return 0 }
         switch goal.type {
+        case .workout where goal.workoutMeasure == .longestWorkout:
+            // One workout of at least N minutes is done or not: an 18-minute workout is 0 of 1.
+            return (summary.value ?? 0) >= goal.target ? 1 : 0
         case .steps, .workout, .screenTime, .pickups:
             guard goal.target > 0 else { return 0 }
             return min(1, (summary.value ?? 0) / goal.target)
-        case .overeating, .wakeup:
+        case .overeating, .wakeup, .phoneBeforeBed:
             return summary.status == .pending ? 0 : 1
         }
     }
