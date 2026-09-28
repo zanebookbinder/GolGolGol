@@ -46,7 +46,10 @@ struct GoalCompanionApp: App {
                 await model.start()
                 await model.refresh()
                 await ScreenTimeMonitor.checkHealth()
-                // For the screen time and pickups heads-ups; asks once.
+                #if DEBUG
+                ScreenTimeMonitor.writeDebugSnapshot()
+                #endif
+                // For the screen time heads-up; asks once.
                 _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
                 await SnapshotReminders.schedule()
                 Self.scheduleRefresh()
@@ -93,6 +96,24 @@ struct GoalCompanionApp: App {
 /// Keeps DeviceActivity monitoring in step with the screen time goal and watches for lost access.
 enum ScreenTimeMonitor {
     private static let alertedKey = "screenTimeAlertDay"
+
+    #if DEBUG
+    /// The Screen Time log and monitoring state, copied into the app's own container where
+    /// `devicectl` can read it (the App Group can't be).
+    @MainActor static func writeDebugSnapshot() {
+        let state: [String: Any] = [
+            "authorization": "\(AuthorizationCenter.shared.authorizationStatus)",
+            "monitoringActive": Monitoring.isActive,
+            "hasSelection": Monitoring.hasSelection,
+            "targetMinutes": MonitoringSettings.targetMinutes,
+            "registeredLadder": MonitoringSettings.registeredLadder,
+            "log": EventLog.read().suffix(60).map { "\($0.date.formatted(date: .omitted, time: .standard)) \($0.kind.rawValue) \($0.message)" },
+        ]
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
+              let data = try? JSONSerialization.data(withJSONObject: state, options: .prettyPrinted) else { return }
+        try? data.write(to: caches.appending(path: "screentime-debug.json"))
+    }
+    #endif
 
     /// Called on every data change: passes the owner and target to the extension and re-registers
     /// the threshold ladder when the target changes.

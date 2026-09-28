@@ -79,16 +79,22 @@ public enum GoalEvaluator {
             return summary(atLeast(value, goal.target, over: over), value)
 
         case .screenTime:
-            if let snapshot = latest(relevant, source: .snapshot) {
+            let crossings = relevant.filter { $0.source == .threshold && $0.detail?[MetricKind.key] != MetricKind.monitoring }
+            let snapshot = latest(relevant, source: .snapshot)
+            // A snapshot is exact only until something newer arrives; after that it's a floor.
+            if let snapshot, !crossings.contains(where: { $0.recordedAt > snapshot.recordedAt }) {
                 return summary(atMost(snapshot.value, goal.target, over: over), snapshot.value)
             }
-            let crossed = relevant.filter { $0.source == .threshold && $0.detail?[MetricKind.key] != MetricKind.monitoring }.map { Int($0.value) }
-            let monitored = !crossed.isEmpty || relevant.contains { $0.detail?[MetricKind.key] == MetricKind.monitoring }
+            let monitored = !crossings.isEmpty || snapshot != nil
+                || relevant.contains { $0.detail?[MetricKind.key] == MetricKind.monitoring }
             guard monitored else { return summary(.pending, nil) }
-            let range = ScreenTimeRange(crossed: crossed, ladder: ThresholdLadder.minutes(goal: Int(goal.target)))
-            // Crossing the goal's own threshold means usage reached the limit.
-            let status: DayStatus = Double(range.lowerMinutes) >= goal.target ? .missed : (over ? .hit : .pending)
-            return summary(status, Double(range.lowerMinutes), upper: range.upperMinutes.map(Double.init), .range)
+            let ladder = ThresholdLadder.minutes(goal: Int(goal.target))
+            let crossedRange = ScreenTimeRange(crossed: crossings.map { Int($0.value) }, ladder: ladder)
+            let lower = max(Double(crossedRange.lowerMinutes), snapshot?.value ?? 0)
+            let upper = ladder.first { Double($0) > lower }.map(Double.init)
+            // Crossing the goal's own threshold (or a snapshot over it) means usage reached the limit.
+            let status: DayStatus = lower >= goal.target ? .missed : (over ? .hit : .pending)
+            return summary(status, lower, upper: upper, .range)
 
         case .pickups:
             if let snapshot = latest(relevant, source: .snapshot) {

@@ -85,6 +85,24 @@ struct GoalEvaluatorTests {
         #expect(snap.status == .hit && snap.confidence == .exact && snap.value == 118)
     }
 
+    @Test func staleSnapshotBecomesAFloorForLaterCrossings() {
+        let goal = Goal(ownerId: "u", type: .screenTime, target: 120)
+        let snapshot = metric(.screenTime, .snapshot, 38, at: at(12, 7))
+        // A midday snapshot on its own is exact.
+        #expect(GoalEvaluator.evaluate(goal, metrics: [snapshot], day: day, now: at(13), calendar: calendar).confidence == .exact)
+
+        // A later 60-minute crossing moves the result past it, as a range.
+        let crossing = metric(.screenTime, .threshold, 60, at: at(17))
+        let later = GoalEvaluator.evaluate(goal, metrics: [snapshot, crossing], day: day, now: at(18), calendar: calendar)
+        #expect(later.confidence == .range && later.value == 60 && later.upperValue == 90)
+
+        // A later crossing below the snapshot keeps the snapshot as the floor.
+        let refired = metric(.screenTime, .threshold, 30, at: at(18))
+        let floor = GoalEvaluator.evaluate(goal, metrics: [snapshot, refired], day: day, now: at(18, 30), calendar: calendar)
+        #expect(floor.value == 38 && floor.upperValue == 60)
+        #expect(GoalFormat.value(floor, goal: goal) == "38m–1h")
+    }
+
     @Test func screenTimeWithoutMonitoringIsPending() {
         let goal = Goal(ownerId: "u", type: .screenTime, target: 120)
         #expect(GoalEvaluator.evaluate(goal, metrics: [], day: day, now: at(1, dayOffset: 1), calendar: calendar).status == .pending)

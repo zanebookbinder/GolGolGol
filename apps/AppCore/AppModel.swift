@@ -337,6 +337,12 @@ final class AppModel {
             session = nil
             Task { await engine.setAPI(nil) }
         }
+        // Network hiccups (offline, Wi-Fi switching, TLS failures) aren't worth an alert: the upload
+        // queue keeps everything and the next refresh retries.
+        if error is URLError {
+            print("Sync will retry: \(error.localizedDescription)")
+            return
+        }
         errorMessage = error.localizedDescription
     }
 }

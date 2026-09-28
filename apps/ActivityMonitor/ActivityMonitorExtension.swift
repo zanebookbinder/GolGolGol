@@ -2,12 +2,19 @@ import DeviceActivity
 import Foundation
 import GoalKit
 
-/// Receives DeviceActivity callbacks. Kept small: extensions have tight memory limits and a short run
-/// window. Each reading goes to the App Group inbox first (the app drains it into the store), then
-/// is uploaded directly so the Watch sees it without the companion app opening.
+/// Receives DeviceActivity callbacks. iOS gives this extension a few MB of memory and a short run
+/// window and kills it if it goes over, so it does the minimum: records the reading in the App Group
+/// inbox (the app drains it into the store and uploads it on its next launch or background refresh)
+/// and posts the "30 minutes left" heads-up. No networking or login here.
 final class ActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
+        guard Monitoring.hasSelection else {
+            EventLog.append(.error, "Day started, but no apps or categories are selected, so screen time can't be measured")
+            return
+        }
+        AppGroup.inbox.append([Monitoring.monitoringMarker(ownerId: MonitoringSettings.ownerId)])
+        EventLog.append(.monitoring, "Day started")
         // Rebuild the ladder in case the goal changed since the schedule was registered.
         if MonitoringSettings.needsRegistering {
             do {
@@ -16,35 +23,18 @@ final class ActivityMonitorExtension: DeviceActivityMonitor {
                 EventLog.append(.error, "Couldn't rebuild thresholds: \(error.localizedDescription)")
             }
         }
-        guard Monitoring.hasSelection else {
-            EventLog.append(.error, "Day started, but no apps or categories are selected, so screen time can't be measured")
-            return
-        }
-        deliver(Monitoring.monitoringMarker(ownerId: MonitoringSettings.ownerId))
-        EventLog.append(.monitoring, "Day started")
     }
 
     override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
         super.eventDidReachThreshold(event, activity: activity)
         guard let minutes = Monitoring.minutes(from: event) else { return }
-        deliver(Monitoring.crossing(minutes: minutes, ownerId: MonitoringSettings.ownerId))
-        if minutes == MonitoringSettings.targetMinutes - ThresholdLadder.warningMinutes {
-            GoalAlerts.post(id: "screen-time-warning", title: "30 minutes of screen time left",
-                            body: "You're at \(GoalFormat.duration(minutes: Double(minutes))) of your \(GoalFormat.duration(minutes: Double(MonitoringSettings.targetMinutes))) limit today.")
-        }
+        AppGroup.inbox.append([Monitoring.crossing(minutes: minutes, ownerId: MonitoringSettings.ownerId)])
         EventLog.append(.threshold, "Screen time passed \(GoalFormat.duration(minutes: Double(minutes)))")
-    }
 
-    private func deliver(_ metric: Metric) {
-        AppGroup.inbox.append([metric])
-        guard metric.ownerId != LocalStore.localOwnerId, let config = BackendConfig.load() else { return }
-        let api = GoalAPI(client: GraphQLClient(url: config.graphQLURL, auth: CognitoAuth(config: config, store: AppGroup.keychain)))
-        let done = DispatchSemaphore(value: 0)
-        Task {
-            try? await api.put(metric)
-            done.signal()
+        let target = MonitoringSettings.targetMinutes
+        if minutes == target - ThresholdLadder.warningMinutes {
+            GoalAlerts.post(id: "screen-time-warning", title: "30 minutes of screen time left",
+                            body: "You're at \(GoalFormat.duration(minutes: Double(minutes))) of your \(GoalFormat.duration(minutes: Double(target))) limit today.")
         }
-        // Stay alive long enough for the upload; if it fails, the app retries from the inbox.
-        _ = done.wait(timeout: .now() + 10)
     }
 }
