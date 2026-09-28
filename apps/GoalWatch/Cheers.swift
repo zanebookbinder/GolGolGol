@@ -3,11 +3,10 @@ import GoalKit
 import UserNotifications
 import WatchKit
 
-/// Announces a new cheer on the Watch (a notification and a haptic tap), at most once per cheer per
-/// day. A better cheer later the same night (Clean sheet, then GOOOOOL!) is announced too.
+/// Announces a new cheer on the Watch (a notification and a haptic tap), at most once per cheer per day.
 enum Cheers {
     private static let key = "cheered"
-    private static let rank: [Celebration: Int] = [.cleanSheet: 1, .goooool: 2, .hatTrick: 3]
+    private static let rank: [Celebration: Int] = [.goooool: 1, .hatTrick: 2]
 
     @MainActor static func announceIfNew(_ celebration: Celebration?, day: DayKey = .today()) {
         guard let celebration else { return }

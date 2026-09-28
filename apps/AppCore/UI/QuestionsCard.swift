@@ -78,7 +78,7 @@ extension AppModel {
     }
 }
 
-/// "GOOOOOL!", "Clean sheet!" or "Hat trick!" at the top of Today during the recap.
+/// "GOOOOOL!" or "Hat trick!" at the top of Today during the recap.
 struct CelebrationBanner: View {
     var celebration: Celebration
 

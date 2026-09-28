@@ -28,7 +28,7 @@ shared with a partner, and wrapped up each night on your wrist.
   - 30 minutes before the screen time limit;
   - 6pm if steps or the workout aren't done;
   - the nightly recap, with over-eating answerable from the notification.
-- **Cheers in the nightly recap:** "GOOOOOL!" when every goal is done, "Clean sheet!" when screen time and pickups stay under their limits, and "Hat trick!" for three perfect days in a row.
+- **Cheers in the nightly recap:** "GOOOOOL!" when every goal is done and "Hat trick!" for three perfect days in a row.
 - **Partner sharing:** exchange an invite code, and each of you sees the other's goals live.
 - **Challenges:** pick a date range and track completion % and per-day averages for each goal.
 

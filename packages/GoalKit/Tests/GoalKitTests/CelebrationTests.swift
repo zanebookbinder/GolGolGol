@@ -31,25 +31,15 @@ struct CelebrationTests {
         #expect(Celebrations.best(for: today, goals: goals) { goal, day in day == today ? tonight[goal.type] : earlier[goal.type] } == .hatTrick)
     }
 
-    @Test func cleanSheetWhenOnlyScreenGoalsAreClean() {
-        var statuses = perfectTonight
-        statuses[.steps] = .pending // steps not done yet
-        let tonight = results(statuses)
-        #expect(Celebrations.best(for: today, goals: goals) { goal, _ in tonight[goal.type] } == .cleanSheet)
-    }
-
-    @Test func nothingWhenScreenTimeIsMissed() {
+    @Test func nothingWhenAGoalIsMissedOrNotDone() {
         var statuses = perfectTonight
         statuses[.screenTime] = .missed
-        statuses[.steps] = .pending
-        let tonight = results(statuses)
-        #expect(Celebrations.best(for: today, goals: goals) { goal, _ in tonight[goal.type] } == nil)
-    }
+        let missed = results(statuses)
+        #expect(Celebrations.best(for: today, goals: goals) { goal, _ in missed[goal.type] } == nil)
 
-    @Test func unansweredOverEatingBlocksGooooolButNotCleanSheet() {
-        var statuses = perfectTonight
-        statuses[.overeating] = .pending
-        let tonight = results(statuses)
-        #expect(Celebrations.best(for: today, goals: goals) { goal, _ in tonight[goal.type] } == .cleanSheet)
+        statuses = perfectTonight
+        statuses[.overeating] = .pending // not answered yet
+        let unanswered = results(statuses)
+        #expect(Celebrations.best(for: today, goals: goals) { goal, _ in unanswered[goal.type] } == nil)
     }
 }
