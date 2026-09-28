@@ -1,0 +1,185 @@
+# Generate GoalTracker.xcodeproj with: cd apps && xcodegen
+# Before building on a device, set DEVELOPMENT_TEAM below to your Apple Developer team ID.
+# Without backend/amplify_outputs.json the apps run local-only (no sign-in or sharing).
+name: GoalTracker
+
+options:
+  bundleIdPrefix: com.zanebookbinder.goaltracker
+  deploymentTarget:
+    iOS: "18.0"
+    watchOS: "11.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: XFNCN2MARQ
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  GoalKit:
+    path: ../packages/GoalKit
+
+targets:
+  # MARK: iPhone
+
+  GoalCompanion:
+    type: application
+    platform: iOS
+    sources:
+      - GoalCompanion
+      - Shared
+      - Common
+      - AppCore
+      - path: ../backend/amplify_outputs.json
+        optional: true
+        buildPhase: resources
+      - path: ../shortcuts/signed
+        buildPhase: resources
+    dependencies:
+      - package: GoalKit
+      - target: ActivityMonitor
+      - target: ActivityReport
+      - target: GoalWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker
+    info:
+      path: GoalCompanion/Info.plist
+      properties:
+        CFBundleDisplayName: "GolGolGol!!!"
+        UILaunchScreen: {}
+        CFBundleURLTypes:
+          - CFBundleURLName: com.zanebookbinder.goaltracker
+            CFBundleURLSchemes: [goaltracker]
+        NSHealthShareUsageDescription: GolGolGol!!! reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.zanebookbinder.goaltracker.refresh]
+    entitlements:
+      path: GoalCompanion/GoalCompanion.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.background-delivery: true
+        com.apple.security.application-groups: [group.com.zanebookbinder.goaltracker]
+
+  ActivityMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ActivityMonitor
+      - Shared
+      - Common
+      - path: ../backend/amplify_outputs.json
+        optional: true
+        buildPhase: resources
+    dependencies:
+      - package: GoalKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.ActivityMonitor
+    info:
+      path: ActivityMonitor/Info.plist
+      properties:
+        CFBundleDisplayName: ActivityMonitor
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ActivityMonitorExtension
+    entitlements:
+      path: ActivityMonitor/ActivityMonitor.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+        com.apple.security.application-groups: [group.com.zanebookbinder.goaltracker]
+
+  # An ExtensionKit extension (embedded in Extensions/), unlike the monitor, which is a classic app extension.
+  ActivityReport:
+    type: extensionkit-extension
+    platform: iOS
+    sources: [ActivityReport, Shared/ReportContext.swift]
+    dependencies:
+      - package: GoalKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.ActivityReport
+    info:
+      path: ActivityReport/Info.plist
+      properties:
+        CFBundleDisplayName: ActivityReport
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.deviceactivityui.report-extension
+    entitlements:
+      path: ActivityReport/ActivityReport.entitlements
+      properties:
+        com.apple.developer.family-controls: true
+
+  # MARK: Watch
+
+  GoalWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - GoalWatch
+      - AppCore
+      - Common
+      - path: ../backend/amplify_outputs.json
+        optional: true
+        buildPhase: resources
+    dependencies:
+      - package: GoalKit
+      - target: GoalWatchWidgets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.watchkitapp
+    info:
+      path: GoalWatch/Info.plist
+      properties:
+        CFBundleDisplayName: "GolGolGol!!!"
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.zanebookbinder.goaltracker
+        WKRunsIndependentlyOfCompanionApp: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.zanebookbinder.goaltracker.watch
+            CFBundleURLSchemes: [goaltracker]
+        NSHealthShareUsageDescription: GolGolGol!!! reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+    entitlements:
+      path: GoalWatch/GoalWatch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.background-delivery: true
+        com.apple.security.application-groups: [group.com.zanebookbinder.goaltracker]
+
+  GoalWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources: [GoalWatchWidgets, Common]
+    dependencies:
+      - package: GoalKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.watchkitapp.widgets
+    info:
+      path: GoalWatchWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: "GolGolGol!!! Widgets"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: GoalWatchWidgets/GoalWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.zanebookbinder.goaltracker]
+
+schemes:
+  GoalCompanion:
+    build:
+      targets:
+        GoalCompanion: all
+    run:
+      config: Debug
+  GoalWatch:
+    build:
+      targets:
+        GoalWatch: all
+    run:
+      config: Debug

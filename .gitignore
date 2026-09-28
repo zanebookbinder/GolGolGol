@@ -1,0 +1,10 @@
+.DS_Store
+xcuserdata/
+DerivedData/
+.build/
+.swiftpm/
+*.xcodeproj/
+apps/*/Info.plist
+apps/*/*.entitlements
+node_modules/
+.amplify/

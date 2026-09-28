@@ -1,0 +1,1100 @@
+{
+  "auth": {
+    "user_pool_id": "us-east-1_BWtf75BXA",
+    "aws_region": "us-east-1",
+    "user_pool_client_id": "38jb0j4tqhpbd29jbqcoimbmgn",
+    "identity_pool_id": "us-east-1:b408d284-7599-4632-b63b-9ac27b15d78c",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    },
+    "oauth": {
+      "identity_providers": [],
+      "redirect_sign_in_uri": [
+        "goaltracker://auth/"
+      ],
+      "redirect_sign_out_uri": [
+        "goaltracker://signout/"
+      ],
+      "response_type": "code",
+      "scopes": [
+        "phone",
+        "email",
+        "openid",
+        "profile",
+        "aws.cognito.signin.user.admin"
+      ],
+      "domain": "49f8e07a57103d1e5916.auth.us-east-1.amazoncognito.com"
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "data": {
+    "url": "https://h27z67gcqbfgrg3wgpa6xlvtva.appsync-api.us-east-1.amazonaws.com/graphql",
+    "aws_region": "us-east-1",
+    "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
+    "authorization_types": [
+      "AWS_IAM"
+    ],
+    "model_introspection": {
+      "version": 1,
+      "models": {
+        "User": {
+          "name": "User",
+          "fields": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "displayName": {
+              "name": "displayName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "timeZone": {
+              "name": "timeZone",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Users",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "ownerId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "identityClaim": "sub",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "ownerId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Goal": {
+          "name": "Goal",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "type": {
+              "name": "type",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "direction": {
+              "name": "direction",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "target": {
+              "name": "target",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": true,
+              "attributes": []
+            },
+            "unit": {
+              "name": "unit",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "active": {
+              "name": "active",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "days": {
+              "name": "days",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "workoutMeasure": {
+              "name": "workoutMeasure",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "changedAt": {
+              "name": "changedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Goals",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "ownerId",
+                  "id"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "identityClaim": "sub",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "ownerId",
+            "sortKeyFieldNames": [
+              "id"
+            ]
+          }
+        },
+        "Metric": {
+          "name": "Metric",
+          "fields": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "sk": {
+              "name": "sk",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "metricId": {
+              "name": "metricId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "date": {
+              "name": "date",
+              "isArray": false,
+              "type": "AWSDate",
+              "isRequired": true,
+              "attributes": []
+            },
+            "type": {
+              "name": "type",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "source": {
+              "name": "source",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": true,
+              "attributes": []
+            },
+            "recordedAt": {
+              "name": "recordedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "detail": {
+              "name": "detail",
+              "isArray": false,
+              "type": "AWSJSON",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Metrics",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "ownerId",
+                  "sk"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "identityClaim": "sub",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "ownerId",
+            "sortKeyFieldNames": [
+              "sk"
+            ]
+          }
+        },
+        "DaySummary": {
+          "name": "DaySummary",
+          "fields": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "sk": {
+              "name": "sk",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "date": {
+              "name": "date",
+              "isArray": false,
+              "type": "AWSDate",
+              "isRequired": true,
+              "attributes": []
+            },
+            "goalId": {
+              "name": "goalId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "goalType": {
+              "name": "goalType",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "upperValue": {
+              "name": "upperValue",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "confidence": {
+              "name": "confidence",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "changedAt": {
+              "name": "changedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "DaySummaries",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "ownerId",
+                  "sk"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "identityClaim": "sub",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "ownerId",
+            "sortKeyFieldNames": [
+              "sk"
+            ]
+          }
+        },
+        "Share": {
+          "name": "Share",
+          "fields": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "viewerId": {
+              "name": "viewerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ownerName": {
+              "name": "ownerName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "viewerName": {
+              "name": "viewerName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Shares",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "ownerId",
+                  "viewerId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "operations": [
+                      "read",
+                      "delete"
+                    ],
+                    "identityClaim": "sub"
+                  },
+                  {
+                    "provider": "userPools",
+                    "ownerField": "viewerId",
+                    "allow": "owner",
+                    "operations": [
+                      "read",
+                      "delete"
+                    ],
+                    "identityClaim": "sub"
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "ownerId",
+            "sortKeyFieldNames": [
+              "viewerId"
+            ]
+          }
+        },
+        "Invite": {
+          "name": "Invite",
+          "fields": {
+            "code": {
+              "name": "code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ownerName": {
+              "name": "ownerName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "expiresAt": {
+              "name": "expiresAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ttl": {
+              "name": "ttl",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Invites",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "code"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "ownerId",
+                    "allow": "owner",
+                    "operations": [
+                      "read",
+                      "delete"
+                    ],
+                    "identityClaim": "sub"
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "code",
+            "sortKeyFieldNames": []
+          }
+        }
+      },
+      "enums": {},
+      "nonModels": {},
+      "queries": {
+        "goalsFor": {
+          "name": "goalsFor",
+          "isArray": true,
+          "type": {
+            "model": "Goal"
+          },
+          "isRequired": false,
+          "isArrayNullable": true,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "daySummariesFor": {
+          "name": "daySummariesFor",
+          "isArray": true,
+          "type": {
+            "model": "DaySummary"
+          },
+          "isRequired": false,
+          "isArrayNullable": true,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "from": {
+              "name": "from",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "to": {
+              "name": "to",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "metricsFor": {
+          "name": "metricsFor",
+          "isArray": true,
+          "type": {
+            "model": "Metric"
+          },
+          "isRequired": false,
+          "isArrayNullable": true,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "from": {
+              "name": "from",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "to": {
+              "name": "to",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
+      },
+      "mutations": {
+        "putUser": {
+          "name": "putUser",
+          "isArray": false,
+          "type": {
+            "model": "User"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "displayName": {
+              "name": "displayName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "timeZone": {
+              "name": "timeZone",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "upsertGoal": {
+          "name": "upsertGoal",
+          "isArray": false,
+          "type": {
+            "model": "Goal"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "type": {
+              "name": "type",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "direction": {
+              "name": "direction",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "target": {
+              "name": "target",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": true
+            },
+            "unit": {
+              "name": "unit",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "active": {
+              "name": "active",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true
+            },
+            "days": {
+              "name": "days",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true
+            },
+            "workoutMeasure": {
+              "name": "workoutMeasure",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "changedAt": {
+              "name": "changedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true
+            }
+          }
+        },
+        "putMetric": {
+          "name": "putMetric",
+          "isArray": false,
+          "type": {
+            "model": "Metric"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "sk": {
+              "name": "sk",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "metricId": {
+              "name": "metricId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "date": {
+              "name": "date",
+              "isArray": false,
+              "type": "AWSDate",
+              "isRequired": true
+            },
+            "type": {
+              "name": "type",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "source": {
+              "name": "source",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": true
+            },
+            "recordedAt": {
+              "name": "recordedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true
+            },
+            "detail": {
+              "name": "detail",
+              "isArray": false,
+              "type": "AWSJSON",
+              "isRequired": false
+            }
+          }
+        },
+        "upsertDaySummary": {
+          "name": "upsertDaySummary",
+          "isArray": false,
+          "type": {
+            "model": "DaySummary"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "sk": {
+              "name": "sk",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "date": {
+              "name": "date",
+              "isArray": false,
+              "type": "AWSDate",
+              "isRequired": true
+            },
+            "goalId": {
+              "name": "goalId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "goalType": {
+              "name": "goalType",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "upperValue": {
+              "name": "upperValue",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "confidence": {
+              "name": "confidence",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "changedAt": {
+              "name": "changedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true
+            }
+          }
+        },
+        "makeInvite": {
+          "name": "makeInvite",
+          "isArray": false,
+          "type": {
+            "model": "Invite"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerName": {
+              "name": "ownerName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "acceptInvite": {
+          "name": "acceptInvite",
+          "isArray": false,
+          "type": {
+            "model": "Share"
+          },
+          "isRequired": false,
+          "arguments": {
+            "code": {
+              "name": "code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "viewerName": {
+              "name": "viewerName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
+      },
+      "subscriptions": {
+        "onDaySummaryUpserted": {
+          "name": "onDaySummaryUpserted",
+          "isArray": false,
+          "type": {
+            "model": "DaySummary"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ownerId": {
+              "name": "ownerId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": "1.5"
+}
