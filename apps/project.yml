@@ -16,7 +16,7 @@ settings:
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
 
 packages:
   GoalKit:
@@ -46,16 +46,22 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker
+        TARGETED_DEVICE_FAMILY: "1" # iPhone only
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: GoalCompanion/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: "Golazo"
         UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
         CFBundleURLTypes:
           - CFBundleURLName: com.zanebookbinder.goaltracker
             CFBundleURLSchemes: [goaltracker]
         NSHealthShareUsageDescription: Golazo reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+        NSHealthUpdateUsageDescription: Golazo only reads Health data; it doesn't write any.
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [com.zanebookbinder.goaltracker.refresh]
     entitlements:
@@ -81,9 +87,12 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.ActivityMonitor
+        TARGETED_DEVICE_FAMILY: "1" # iPhone only
     info:
       path: ActivityMonitor/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: ActivityMonitor
         NSExtension:
           NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
@@ -104,9 +113,12 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.zanebookbinder.goaltracker.ActivityReport
+        TARGETED_DEVICE_FAMILY: "1" # iPhone only
     info:
       path: ActivityReport/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: ActivityReport
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.deviceactivityui.report-extension
@@ -137,14 +149,18 @@ targets:
     info:
       path: GoalWatch/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: "Golazo"
         WKApplication: true
+        ITSAppUsesNonExemptEncryption: false
         WKCompanionAppBundleIdentifier: com.zanebookbinder.goaltracker
         WKRunsIndependentlyOfCompanionApp: true
         CFBundleURLTypes:
           - CFBundleURLName: com.zanebookbinder.goaltracker.watch
             CFBundleURLSchemes: [goaltracker]
         NSHealthShareUsageDescription: Golazo reads steps, workouts, exercise minutes, and sleep to check your daily goals.
+        NSHealthUpdateUsageDescription: Golazo only reads Health data; it doesn't write any.
     entitlements:
       path: GoalWatch/GoalWatch.entitlements
       properties:
@@ -164,6 +180,8 @@ targets:
     info:
       path: GoalWatchWidgets/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDisplayName: "Golazo Widgets"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
